@@ -6,10 +6,6 @@ import Employee from './routes/employee';
 import Employees from './routes/employees';
 
 const globalStyles = css`
-  body {
-    display: grid;
-    place-content: center;
-  }
   ::-webkit-scrollbar {
     width: 8px;
     height: 8px;

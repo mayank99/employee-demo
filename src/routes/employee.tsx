@@ -1,5 +1,7 @@
 import { useParams } from 'react-router-dom';
 
+import data from '../../mock-data.json';
+
 export default function Employee() {
   const { employeeId } = useParams();
 
@@ -7,5 +9,7 @@ export default function Employee() {
     return <>Not a valid employee ID</>;
   }
 
-  return <span>Hi {employeeId}</span>;
+  const employee = data.find(({ id }) => id === parseInt(employeeId));
+
+  return <span>Hi {employee?.name}</span>;
 }
