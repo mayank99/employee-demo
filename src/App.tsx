@@ -41,7 +41,11 @@ export default function App() {
 
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
   const theme = React.useMemo(
-    () => createTheme({ palette: { mode: prefersDarkMode ? 'dark' : 'light' } }),
+    () =>
+      createTheme({
+        palette: { mode: prefersDarkMode ? 'dark' : 'light' },
+        typography: { fontFamily: 'system-ui, Roboto, Arial, sans-serif'},
+      }),
     [prefersDarkMode]
   );
 
