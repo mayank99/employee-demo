@@ -3,7 +3,7 @@ import styled from '@emotion/styled';
 import invariant from 'tiny-invariant';
 import { Avatar, Dialog, Divider, IconButton, TextField, Typography } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
-import { deleteEmployee, EmployeeData, getEmployee, updateEmployee } from '../api';
+import { addEmployee, deleteEmployee, EmployeeData, getEmployee, updateEmployee } from '../api';
 import SvgClose from '@mui/icons-material/Close';
 import SvgEdit from '@mui/icons-material/Edit';
 import SvgSave from '@mui/icons-material/Save';
@@ -14,15 +14,15 @@ const FORM_FIELDS = ['name', 'avatar', ...PROFILE_FIELDS] as const;
 
 const EmployeeContext = React.createContext<
   | {
-      employee: EmployeeData | undefined;
-      setEmployee: React.Dispatch<React.SetStateAction<EmployeeData | undefined>>;
+      employee: EmployeeData;
+      setEmployee: React.Dispatch<React.SetStateAction<EmployeeData>>;
     }
   | undefined
 >(undefined);
 
 export default function Employee({ operation = 'view' }: { operation?: 'view' | 'create' | 'edit' }) {
   const { employeeId } = useParams();
-  const [employee, setEmployee] = React.useState<EmployeeData>();
+  const [employee, setEmployee] = React.useState<EmployeeData>({});
 
   React.useEffect(() => {
     if (operation === 'view' || operation === 'edit') {
@@ -47,20 +47,27 @@ export default function Employee({ operation = 'view' }: { operation?: 'view' | 
             </IconButton>
           )}
           {operation === 'view' && (
-            <IconButton aria-label='Delete' onClick={async () => {
-              invariant(employee?.id, 'Employee ID is undefined');
-              await deleteEmployee(employee.id);
-              navigate('/');
-            }}>
+            <IconButton
+              aria-label='Delete'
+              onClick={async () => {
+                invariant(employee.id, 'Employee ID is undefined');
+                await deleteEmployee(employee.id);
+                navigate('/');
+              }}
+            >
               <SvgDelete />
             </IconButton>
           )}
           {operation !== 'view' && (
             <IconButton
               aria-label='Save'
+              disabled={!employee?.name}
               onClick={async () => {
-                invariant(employee?.id, 'Employee ID is undefined');
-                await updateEmployee(employee.id, employee);
+                if (employee.id !== undefined) {
+                  await updateEmployee(employee.id, employee);
+                } else {
+                  await addEmployee(employee);
+                }
                 navigate('/');
               }}
             >
@@ -144,11 +151,12 @@ const EmployeeForm = () => {
 
 const ContentWrapper = styled.div`
   width: min(600px, 80vw);
-  min-height: 600px;
+  min-height: 550px;
   overflow-y: auto;
   overflow-y: overlay;
   display: grid;
   justify-items: center;
+  align-content: start;
   gap: 16px;
   padding: 24px;
   position: relative;

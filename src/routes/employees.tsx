@@ -1,11 +1,12 @@
 import * as React from 'react';
 import { DataGrid, GridInputSelectionModel } from '@mui/x-data-grid';
 import styled from '@emotion/styled';
-import { IconButton, SxProps, TextField, Typography, useMediaQuery } from '@mui/material';
-import { Outlet, useNavigate, useParams } from 'react-router-dom';
+import { Button, Fab, IconButton, SxProps, TextField, Typography, useMediaQuery } from '@mui/material';
+import { Link, Outlet, useNavigate, useParams } from 'react-router-dom';
 import { EmployeeData, getEmployees } from '../api';
 import SvgSearch from '@mui/icons-material/Search';
 import SvgClear from '@mui/icons-material/Clear';
+import SvgAdd from '@mui/icons-material/Add';
 
 const BASIC_COLUMNS = ['name', 'role'] as const;
 const ALL_COLUMNS = [...BASIC_COLUMNS, 'department', 'city', 'country'] as const;
@@ -21,9 +22,13 @@ export default function Employees() {
     (async () => {
       const _data = await getEmployees();
       setData(_data);
-      setRows(_data);
     })();
   }, [params]);
+
+  // Reset rows when data changes
+  React.useEffect(() => {
+    setRows(data);
+  }, [data]);
 
   const [searchValue, setSearchValue] = React.useState('');
   const [selectionModel, setSelectionModel] = React.useState<GridInputSelectionModel>([]);
@@ -60,6 +65,15 @@ export default function Employees() {
         <Typography variant='h5' component='div' sx={{ flex: 1 }}>
           Employees
         </Typography>
+        <Button
+          component={Link}
+          to='employee/new'
+          variant='contained'
+          startIcon={<SvgAdd />}
+          sx={{ marginLeft: 'auto' }}
+        >
+          New
+        </Button>
         <TextField
           variant='outlined'
           size='small'

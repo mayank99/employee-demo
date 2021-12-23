@@ -6,7 +6,7 @@ export type EmployeeData = Partial<typeof data[0]>;
 let employees: EmployeeData[] = data;
 
 export const getEmployees = async () => {
-  return employees;
+  return [...employees].reverse();
 };
 
 export const getEmployee = async (employeeId: number) => {
