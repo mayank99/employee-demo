@@ -1,7 +1,7 @@
 import { DataGrid, GridInputSelectionModel } from '@mui/x-data-grid';
 import styled from '@emotion/styled';
-import { SxProps } from '@mui/material';
-import { useState } from 'react';
+import { SxProps, Typography } from '@mui/material';
+import { useEffect, useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 
 import data from '../../mock-data.json';
@@ -9,6 +9,10 @@ import data from '../../mock-data.json';
 export default function Employees() {
   const [selectionModel, setSelectionModel] = useState<GridInputSelectionModel>([]);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    setSelectionModel([])
+  }, []);
 
   const columns = Object.keys(data[0])
     .filter((field) => ['name', 'role', 'department', 'city', 'country'].includes(field))
@@ -20,7 +24,7 @@ export default function Employees() {
 
   return (
     <PageWrapper>
-      <div>Employees</div>
+      <Typography variant='h5'>Employees</Typography>
       <DataGridWrapper>
         <DataGrid
           columns={columns}

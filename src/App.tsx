@@ -20,7 +20,19 @@ export default function App() {
     {
       path: '/',
       element: <Employees />,
-      children: [{ path: '/employee/:employeeId', element: <Employee /> }],
+      children: [
+        {
+          path: 'employee',
+          children: [
+            { path: 'new', element: <Employee operation='create' /> },
+            {
+              path: ':employeeId',
+              element: <Employee operation='view' />,
+              children: [{ path: 'edit', element: <Employee operation='edit' /> }],
+            },
+          ],
+        },
+      ],
     },
   ]);
 
