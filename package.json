@@ -1,5 +1,6 @@
 {
   "name": "employee-demo",
+  "description": "A basic UI for viewing and managing employee details.",
   "version": "0.0.0",
   "scripts": {
     "dev": "vite",
