@@ -1,38 +1,79 @@
 import * as React from 'react';
 import { DataGrid, GridInputSelectionModel } from '@mui/x-data-grid';
 import styled from '@emotion/styled';
-import { SxProps, Typography } from '@mui/material';
+import { IconButton, SxProps, TextField, Typography, useMediaQuery } from '@mui/material';
 import { Outlet, useNavigate } from 'react-router-dom';
+import SvgSearch from '@mui/icons-material/Search';
+import SvgClear from '@mui/icons-material/Clear';
 
 import data from '../../mock-data.json';
 
+const BASIC_COLUMNS = ['name', 'role'] as const;
+const ALL_COLUMNS = [...BASIC_COLUMNS, 'department', 'city', 'country'] as const;
+
 export default function Employees() {
+  const [rows, setRows] = React.useState(data);
+  const [searchValue, setSearchValue] = React.useState('');
   const [selectionModel, setSelectionModel] = React.useState<GridInputSelectionModel>([]);
+
   const navigate = useNavigate();
 
-  React.useEffect(() => {
-    setSelectionModel([]);
-  }, []);
+  const isMobile = useMediaQuery(`(max-width: 550px)`);
+
+  const doSearch = (searchTerm: string) => {
+    setSearchValue(searchTerm);
+    const filteredRows = data.filter((row) =>
+      Object.entries(row).some(
+        ([field, value]) =>
+          ALL_COLUMNS.find((column) => column === field) &&
+          value?.toString().toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    );
+    setRows(filteredRows);
+  };
 
   const columns = React.useMemo(
     () =>
-      Object.keys(data[0])
-        .filter((field) => ['name', 'role', 'department', 'city', 'country'].includes(field))
-        .map((field) => ({
-          field: field,
-          headerName: `${field[0].toUpperCase()}${field.substring(1)}`,
-          flex: 1,
-        })),
-    []
+      (isMobile ? BASIC_COLUMNS : ALL_COLUMNS).map((field) => ({
+        field: field,
+        headerName: `${field[0].toUpperCase()}${field.substring(1)}`,
+        flex: 1,
+      })),
+    [isMobile]
   );
 
   return (
     <PageWrapper>
-      <Typography variant='h5'>Employees</Typography>
+      <Header>
+        <Typography variant='h5' component='div' sx={{ flex: 1 }}>
+          Employees
+        </Typography>
+        <TextField
+          variant='outlined'
+          size='small'
+          placeholder='Search…'
+          value={searchValue}
+          onChange={({ target: { value } }) => doSearch(value)}
+          InputProps={{
+            startAdornment: <SvgSearch sx={{ marginRight: '8px' }} fontSize='small' />,
+            endAdornment: (
+              <IconButton
+                aria-label='Clear'
+                size='small'
+                style={{ visibility: searchValue ? 'visible' : 'hidden' }}
+                onClick={() => doSearch('')}
+              >
+                <SvgClear fontSize='small' />
+              </IconButton>
+            ),
+          }}
+          sx={{ flex: 1, minWidth: 300, maxWidth: 500 }}
+        />
+      </Header>
       <DataGridWrapper>
         <DataGrid
           columns={columns}
-          rows={data}
+          rows={rows}
           sx={tableStyles}
           showColumnRightBorder={false}
           selectionModel={selectionModel}
@@ -53,9 +94,18 @@ const PageWrapper = styled.div`
   height: 100vh;
   padding: 16px;
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto 1fr;
   gap: 16px;
   justify-content: center;
+`;
+
+const Header = styled.div`
+  width: min(90vw, 1500px);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: baseline;
+  justify-content: space-between;
 `;
 
 const DataGridWrapper = styled.div`
