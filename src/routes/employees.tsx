@@ -2,17 +2,29 @@ import * as React from 'react';
 import { DataGrid, GridInputSelectionModel } from '@mui/x-data-grid';
 import styled from '@emotion/styled';
 import { IconButton, SxProps, TextField, Typography, useMediaQuery } from '@mui/material';
-import { Outlet, useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate, useParams } from 'react-router-dom';
+import { EmployeeData, getEmployees } from '../api';
 import SvgSearch from '@mui/icons-material/Search';
 import SvgClear from '@mui/icons-material/Clear';
-
-import data from '../../mock-data.json';
 
 const BASIC_COLUMNS = ['name', 'role'] as const;
 const ALL_COLUMNS = [...BASIC_COLUMNS, 'department', 'city', 'country'] as const;
 
 export default function Employees() {
-  const [rows, setRows] = React.useState(data);
+  const [data, setData] = React.useState<EmployeeData[]>([]); // full data
+  const [rows, setRows] = React.useState<EmployeeData[]>([]); // visible rows (filtered)
+
+  const params = useParams();
+
+  // Load fresh data on every navigation
+  React.useEffect(() => {
+    (async () => {
+      const _data = await getEmployees();
+      setData(_data);
+      setRows(_data);
+    })();
+  }, [params]);
+
   const [searchValue, setSearchValue] = React.useState('');
   const [selectionModel, setSelectionModel] = React.useState<GridInputSelectionModel>([]);
 

@@ -3,14 +3,11 @@ import styled from '@emotion/styled';
 import invariant from 'tiny-invariant';
 import { Avatar, Dialog, Divider, IconButton, TextField, Typography } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
+import { deleteEmployee, EmployeeData, getEmployee, updateEmployee } from '../api';
 import SvgClose from '@mui/icons-material/Close';
 import SvgEdit from '@mui/icons-material/Edit';
 import SvgSave from '@mui/icons-material/Save';
 import SvgDelete from '@mui/icons-material/Delete';
-
-import data from '../../mock-data.json';
-
-type EmployeeData = Partial<typeof data[0]>;
 
 const PROFILE_FIELDS = ['role', 'department', 'dob', 'gender', 'email', 'phone', 'city', 'state', 'country'] as const;
 const FORM_FIELDS = ['name', 'avatar', ...PROFILE_FIELDS] as const;
@@ -29,11 +26,14 @@ export default function Employee({ operation = 'view' }: { operation?: 'view' | 
 
   React.useEffect(() => {
     if (operation === 'view' || operation === 'edit') {
-      if (employeeId && parseInt(employeeId)) {
-        setEmployee(data.find(({ id }) => id === parseInt(employeeId)));
-      }
+      (async () => {
+        if (employeeId && parseInt(employeeId)) {
+          const _employee = await getEmployee(parseInt(employeeId));
+          _employee && setEmployee(_employee);
+        }
+      })();
     }
-  }, [operation]);
+  }, [operation, employeeId]);
 
   const navigate = useNavigate();
 
@@ -47,12 +47,23 @@ export default function Employee({ operation = 'view' }: { operation?: 'view' | 
             </IconButton>
           )}
           {operation === 'view' && (
-            <IconButton aria-label='Delete' onClick={() => navigate('/')}>
+            <IconButton aria-label='Delete' onClick={async () => {
+              invariant(employee?.id, 'Employee ID is undefined');
+              await deleteEmployee(employee.id);
+              navigate('/');
+            }}>
               <SvgDelete />
             </IconButton>
           )}
           {operation !== 'view' && (
-            <IconButton aria-label='Save' onClick={() => navigate('/')}>
+            <IconButton
+              aria-label='Save'
+              onClick={async () => {
+                invariant(employee?.id, 'Employee ID is undefined');
+                await updateEmployee(employee.id, employee);
+                navigate('/');
+              }}
+            >
               <SvgSave />
             </IconButton>
           )}
@@ -88,8 +99,12 @@ const EmployeeProfile = () => {
         }
         return (
           <KeyValuePair key={field}>
-            <Typography variant='overline' component='div'>{field}</Typography>
-            <Typography variant='body1' component='div'>{value}</Typography>
+            <Typography variant='overline' component='div'>
+              {field}
+            </Typography>
+            <Typography variant='body1' component='div'>
+              {value}
+            </Typography>
           </KeyValuePair>
         );
       })}
