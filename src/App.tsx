@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import * as React from 'react';
 import { useRoutes } from 'react-router-dom';
 import { css, Global } from '@emotion/react';
 import { createTheme, CssBaseline, ThemeProvider, useMediaQuery } from '@mui/material';
@@ -24,11 +24,14 @@ export default function App() {
         {
           path: 'employee',
           children: [
-            { path: 'new', element: <Employee operation='create' /> },
+            { path: 'new', element: <Employee key='create' operation='create' /> },
             {
               path: ':employeeId',
-              element: <Employee operation='view' />,
-              children: [{ path: 'edit', element: <Employee operation='edit' /> }],
+              element: <Employee key='view' operation='view' />,
+            },
+            {
+              path: ':employeeId/edit',
+              element: <Employee key='edit' operation='edit' />,
             },
           ],
         },
@@ -37,7 +40,7 @@ export default function App() {
   ]);
 
   const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
-  const theme = useMemo(
+  const theme = React.useMemo(
     () => createTheme({ palette: { mode: prefersDarkMode ? 'dark' : 'light' } }),
     [prefersDarkMode]
   );

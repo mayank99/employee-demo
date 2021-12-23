@@ -1,26 +1,30 @@
+import * as React from 'react';
 import { DataGrid, GridInputSelectionModel } from '@mui/x-data-grid';
 import styled from '@emotion/styled';
 import { SxProps, Typography } from '@mui/material';
-import { useEffect, useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 
 import data from '../../mock-data.json';
 
 export default function Employees() {
-  const [selectionModel, setSelectionModel] = useState<GridInputSelectionModel>([]);
+  const [selectionModel, setSelectionModel] = React.useState<GridInputSelectionModel>([]);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    setSelectionModel([])
+  React.useEffect(() => {
+    setSelectionModel([]);
   }, []);
 
-  const columns = Object.keys(data[0])
-    .filter((field) => ['name', 'role', 'department', 'city', 'country'].includes(field))
-    .map((field) => ({
-      field: field,
-      headerName: `${field[0].toUpperCase()}${field.substring(1)}`,
-      flex: 1,
-    }));
+  const columns = React.useMemo(
+    () =>
+      Object.keys(data[0])
+        .filter((field) => ['name', 'role', 'department', 'city', 'country'].includes(field))
+        .map((field) => ({
+          field: field,
+          headerName: `${field[0].toUpperCase()}${field.substring(1)}`,
+          flex: 1,
+        })),
+    []
+  );
 
   return (
     <PageWrapper>

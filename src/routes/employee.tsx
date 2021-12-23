@@ -1,20 +1,34 @@
+import * as React from 'react';
 import styled from '@emotion/styled';
-import { Avatar, Dialog, Divider, IconButton, List, ListItem, Typography } from '@mui/material';
-import { useEffect, useState } from 'react';
+import invariant from 'tiny-invariant';
+import { Avatar, Dialog, Divider, IconButton, TextField, Typography } from '@mui/material';
 import { useNavigate, useParams } from 'react-router-dom';
 import SvgClose from '@mui/icons-material/Close';
 import SvgEdit from '@mui/icons-material/Edit';
+import SvgSave from '@mui/icons-material/Save';
+import SvgDelete from '@mui/icons-material/Delete';
 
 import data from '../../mock-data.json';
 
-type EmployeeData = typeof data[0];
+type EmployeeData = Partial<typeof data[0]>;
+
+const PROFILE_FIELDS = ['role', 'department', 'dob', 'gender', 'email', 'phone', 'city', 'state', 'country'] as const;
+const FORM_FIELDS = ['name', 'avatar', ...PROFILE_FIELDS] as const;
+
+const EmployeeContext = React.createContext<
+  | {
+      employee: EmployeeData | undefined;
+      setEmployee: React.Dispatch<React.SetStateAction<EmployeeData | undefined>>;
+    }
+  | undefined
+>(undefined);
 
 export default function Employee({ operation = 'view' }: { operation?: 'view' | 'create' | 'edit' }) {
-  const [employee, setEmployee] = useState<EmployeeData>();
   const { employeeId } = useParams();
+  const [employee, setEmployee] = React.useState<EmployeeData>();
 
-  useEffect(() => {
-    if (operation === 'view') {
+  React.useEffect(() => {
+    if (operation === 'view' || operation === 'edit') {
       if (employeeId && parseInt(employeeId)) {
         setEmployee(data.find(({ id }) => id === parseInt(employeeId)));
       }
@@ -27,42 +41,55 @@ export default function Employee({ operation = 'view' }: { operation?: 'view' | 
     <Dialog open maxWidth={false} onClose={() => navigate('/')}>
       <ContentWrapper>
         <ActionIcons>
-          {employee && (
-            <IconButton onClick={() => navigate('edit')}>
+          {operation === 'view' && (
+            <IconButton aria-label='Edit' onClick={() => navigate('edit')}>
               <SvgEdit />
             </IconButton>
           )}
-          <IconButton onClick={() => navigate('/')}>
+          {operation === 'view' && (
+            <IconButton aria-label='Delete' onClick={() => navigate('/')}>
+              <SvgDelete />
+            </IconButton>
+          )}
+          {operation !== 'view' && (
+            <IconButton aria-label='Save' onClick={() => navigate('/')}>
+              <SvgSave />
+            </IconButton>
+          )}
+          <IconButton aria-label='Close' onClick={() => navigate('/')}>
             <SvgClose />
           </IconButton>
         </ActionIcons>
 
-        {employee && <EmployeeProfile employee={employee} />}
+        <EmployeeContext.Provider value={{ employee, setEmployee }}>
+          {operation === 'view' ? <EmployeeProfile /> : <EmployeeForm />}
+        </EmployeeContext.Provider>
       </ContentWrapper>
     </Dialog>
   );
 }
 
-const EmployeeProfile = ({ employee }: { employee: EmployeeData }) => {
+const EmployeeProfile = () => {
+  const context = React.useContext(EmployeeContext);
+  invariant(context, 'EmployeeContext not found');
+  const { employee } = context;
+
   return (
     <>
-      <Avatar alt='' src={employee.avatar} sx={{ width: 64, height: 64, border: '1px solid' }} />
-      <Typography variant='h5'>{employee.name}</Typography>
+      <Avatar alt='' src={employee?.avatar} sx={{ width: 64, height: 64, border: '1px solid' }} />
+      <Typography variant='h5'>{employee?.name}</Typography>
 
       <Divider variant='middle' sx={{ justifySelf: 'stretch' }} />
 
-      {(
-        ['role', 'department', 'dob', 'gender', 'email', 'phone', 'city', 'state', 'country', 'time_zone'] as const
-      ).map((field) => {
-        const label = field.split('_').join(' ');
-        const value = employee[field];
+      {PROFILE_FIELDS.map((field) => {
+        const value = employee?.[field];
         if (!value) {
           return null;
         }
         return (
           <KeyValuePair key={field}>
-            <Typography variant='overline'>{label}</Typography>
-            <Typography variant='body1'>{value}</Typography>
+            <Typography variant='overline' component='div'>{field}</Typography>
+            <Typography variant='body1' component='div'>{value}</Typography>
           </KeyValuePair>
         );
       })}
@@ -70,8 +97,41 @@ const EmployeeProfile = ({ employee }: { employee: EmployeeData }) => {
   );
 };
 
+const EmployeeForm = () => {
+  const context = React.useContext(EmployeeContext);
+  invariant(context, 'EmployeeContext not found');
+  const { employee, setEmployee } = context;
+
+  return (
+    <>
+      {FORM_FIELDS.map((field) => (
+        <KeyValuePair key={field}>
+          <Typography variant='overline' component='label' htmlFor={field}>
+            {field}
+          </Typography>
+          <TextField
+            id={field}
+            name={field}
+            size='small'
+            variant='standard'
+            sx={{ width: '40%' }}
+            required={['name', 'role', 'department', 'city', 'country'].includes(field)}
+            value={employee?.[field] ?? ''}
+            onChange={({ target: { value } }) => {
+              setEmployee((old) => ({ ...old, [field]: value }));
+            }}
+          />
+        </KeyValuePair>
+      ))}
+    </>
+  );
+};
+
 const ContentWrapper = styled.div`
   width: min(600px, 80vw);
+  min-height: 600px;
+  overflow-y: auto;
+  overflow-y: overlay;
   display: grid;
   justify-items: center;
   gap: 16px;
@@ -86,7 +146,7 @@ const KeyValuePair = styled.div`
   gap: 12px;
 
   & > :first-child {
-    width: 40%;
+    width: 35%;
     text-align: end;
     line-height: normal;
   }
